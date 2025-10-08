@@ -22,9 +22,12 @@ export default function AdminDashboard() {
     loadData();
   }, []);
 
-  async function loadData() {
-    await Promise.all([loadEmployees(), loadServices(), loadTransactions()]);
-  }
+ async function loadData() {
+  await loadEmployees();
+  await loadServices();
+  await loadTransactions();
+}
+
 
   async function loadEmployees() {
     const { data } = await supabase
@@ -47,36 +50,46 @@ export default function AdminDashboard() {
     if (data) setServices(data);
   }
 
-  async function loadTransactions() {
-    const { data } = await supabase
-      .from('transactions')
-      .select(`
-        *,
-        service_types(*),
-        profiles(*)
-      `)
-      .order('performed_at', { ascending: false });
+async function loadTransactions() {
+  if (!profile) return; // ✅ Güvenlik ve bekleme kontrolü
 
-    if (data) {
-      const stats: EmployeeStats[] = employees.map(employee => {
-        const empTransactions = data.filter(t => t.employee_id === employee.id) as TransactionWithDetails[];
-        const serviceCounts: { [key: string]: number } = {};
+  let query = supabase
+    .from('transactions')
+    .select(`
+      *,
+      service_types(*),
+      profiles(*)
+    `)
+    .order('performed_at', { ascending: false });
 
-        services.forEach(service => {
-          serviceCounts[service.id] = empTransactions.filter(t => t.service_type_id === service.id).length;
-        });
+  // Eğer kullanıcı admin değilse, sadece kendi işlemlerini görsün
+  if (profile.role !== 'admin') {
+    query = query.eq('employee_id', profile.id);
+  }
 
-        return {
-          profile: employee,
-          transactions: empTransactions,
-          totalCount: empTransactions.length,
-          serviceCounts,
-        };
+  const { data } = await query;
+
+  if (data) {
+    const stats: EmployeeStats[] = employees.map(employee => {
+      const empTransactions = data.filter(t => t.employee_id === employee.id) as TransactionWithDetails[];
+      const serviceCounts: { [key: string]: number } = {};
+
+      services.forEach(service => {
+        serviceCounts[service.id] = empTransactions.filter(t => t.service_type_id === service.id).length;
       });
 
-      setEmployeeStats(stats);
-    }
+      return {
+        profile: employee,
+        transactions: empTransactions,
+        totalCount: empTransactions.length,
+        serviceCounts,
+      };
+    });
+
+    setEmployeeStats(stats);
   }
+}
+
 
   async function deleteTransaction(id: string) {
     if (!confirm('Bu işlemi silmek istediğinize emin misiniz?')) return;

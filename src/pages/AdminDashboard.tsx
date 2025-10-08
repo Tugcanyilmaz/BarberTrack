@@ -161,16 +161,11 @@ export default function AdminDashboard() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-slate-900">Çalışan Performansı</h2>
-            <button
-              onClick={() => setShowAddEmployee(!showAddEmployee)}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
-            >
-              <UserPlus className="w-5 h-5" />
-              <span className="hidden sm:inline">Çalışan Ekle</span>
-            </button>
-          </div>
+         <div className="flex items-center justify-between mb-4">
+  <h2 className="text-xl font-bold text-slate-900">Çalışan Performansı</h2>
+  {/* Çalışan ekleme butonu devre dışı bırakıldı */}
+</div>
+
 
           {showAddEmployee && (
             <div className="mb-6 p-4 bg-slate-50 rounded-lg">
